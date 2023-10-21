@@ -1,0 +1,51 @@
+
+version: '3.8'
+
+services:
+
+  # ------------ api service ----------------------------
+  merchant-api:
+    build:
+      dockerfile: ./dockers/merchant-api/Dockerfile
+    container_name: merchant-api
+    ports:
+      - "8080:51"
+    depends_on:
+      - db
+    volumes:
+      - ./packages/merchant-api:/app
+  
+  blog-api:
+    build:
+      dockerfile: ./dockers/blog-api/Dockerfile
+    ports:
+      - "8080:50"
+    depends_on:
+      - db
+    volumes:
+      - ./packages/blog-api:/app
+
+  # ------------- database service -------------------------
+  db:
+    container_name: postgres
+    image: postgres:alphine # this custom PostgresSQL image with PostGIS extension
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_MULTIPLE_DATABASES: blog_db, merchant_db
+    ports:
+      - "5432:5432"
+
+  # ------------ GUI of db service ------------------------
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    # depends_on:
+    #   - db
