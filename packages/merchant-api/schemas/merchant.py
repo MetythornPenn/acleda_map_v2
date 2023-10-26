@@ -25,10 +25,8 @@ class ShowMerchant(BaseModel):
         orm_mode = True
         
         
-class ShowMerchantWithLatLong(BaseModel):
+class ShowMerchantWithId(BaseModel):
     id: int
-    name: Optional[str]
-    latitude: Optional[float]
-    longitude: Optional[float]
+
     class Config:
         orm_mode = True

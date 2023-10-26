@@ -4,6 +4,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.orm import Session
+# import sys
+# sys.setrecursionlimit(1000000000)
 
 from db.session import get_db
 from db.repository.merchant import (
@@ -17,7 +19,12 @@ from db.repository.merchant import (
     get_merchants_with_pagination
     )
 
-from schemas.merchant import (CreateMerchant, ShowMerchant, UpdateMerchant)
+from schemas.merchant import (
+    CreateMerchant, 
+    ShowMerchant, 
+    UpdateMerchant,
+    ShowMerchantWithId,
+    )
 
 
 
@@ -30,6 +37,7 @@ def create_merchant(
     db: Session = Depends(get_db),
 ):
     merchant = create_new_merchant(merchant=merchant, db=db)
+    print("\n", merchant)
     return merchant
 
 # get all merchant route
@@ -76,16 +84,16 @@ def get_merchant_by_lat_long(lat: float, long: float, db: Session = Depends(get_
         )
     return merchant
     
-# get merchant by name, latitude, longitude of route
-@router.get("/merchants/{name}/{lat}/{long}", response_model=ShowMerchant)
-def get_merchat_by_name_lat_long(name: str, lat: float, long: float, db: Session = Depends(get_db)):
-    merchant = get_merchant_by_name_lat_log(lat=lat, long=long, db=db)
-    if not merchant:
-        raise HTTPException(
-            detail=f"merchants with latitude {lat} and longitude {long} does not exist.",
-            status_code=status.HTTP_404_NOT_FOUND,
-        )
-    return merchant
+# # get merchant by name, latitude, longitude of route
+# @router.get("/merchants/{name}/{lat}/{long}", response_model=ShowMerchant)
+# def get_merchat_by_name_lat_long(name: str, lat: float, long: float, db: Session = Depends(get_db)):
+#     merchant = get_merchant_by_name_lat_log(lat=lat, long=long, db=db)
+#     if not merchant:
+#         raise HTTPException(
+#             detail=f"merchants with latitude {lat} and longitude {long} does not exist.",
+#             status_code=status.HTTP_404_NOT_FOUND,
+#         )
+#     return merchant
 
 # get top 10 nearest merchant by latitude, longitude by calculate radius route
 @router.get("/merchants/top10/{lat}/{long}", response_model=List[ShowMerchant])
@@ -97,13 +105,6 @@ def get_top10_nearest_merchant(lat: float, long: float, db: Session = Depends(ge
             status_code=status.HTTP_404_NOT_FOUND,
         )
     return merchant
-
-
-
-
-
-
-
 
 
 

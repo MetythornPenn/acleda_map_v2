@@ -3,8 +3,10 @@ from schemas.merchant import CreateMerchant
 from schemas.merchant import UpdateMerchant
 from sqlalchemy.orm import Session
 
-from math import radians, cos, sin, asin, sqrt, atan2
+from math import radians, sin, cos, sqrt, atan2
 from sqlalchemy import func
+import sys
+sys.setrecursionlimit(10000000)
 
 # create new merchant
 def create_new_merchant(merchant: CreateMerchant, db: Session):
@@ -43,32 +45,31 @@ def get_merchat_by_lat_long(lat: float, long: float, db: Session):
     return merchant
 
 # get merchat by name, latitude, longitude of merchant
-def get_merchant_by_name_lat_log(lat: float, long: float, name: str, db: Session):
+def get_merchant_by_name_lat_log(name: str,lat: float, long: float, db: Session):
     merchant = db.query(Merchant).filter(Merchant.latitude == lat, Merchant.longitude == long, Merchant.name == name).first()
     return merchant 
 
 # -------------------------------------------------------------------------------------
 # get top 10 nearest merchant by latitude, longitude by calculate radius 
-
 def get_top10_nearest_merchant(lat: float, long: float, db: Session):
     # Haversine formula to calculate distance between two points
     def haversine(lat1, lon1, lat2, lon2):
-        R = 6371.0 # Radius of the earth in kilometers
+        R = 6371.0  # Radius of the earth in kilometers
         dlat = radians(lat2 - lat1)
         dlon = radians(lon2 - lon1)
         a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        distance = R * c # Distance in kilometers
+        distance = R * c  # Distance in kilometers
         return distance
     
-    # Calculate the distance between the merchant with user with order by distance 
-    merchant = db.query(Merchant).order_by(
-        func.sqrt((Merchant.latitude - lat) ** 2 + (Merchant.longitude - long) **2)
+    # Calculate the distance between the merchant with the user, ordered by distance
+    merchants = db.query(Merchant).order_by(
+        func.sqrt((Merchant.latitude - lat) ** 2 + (Merchant.longitude - long) ** 2)
     ).limit(10).all()
     
-    # Filter merchants within a certain radius (e.g 10km)
-    radius = 10 # Radius in kilometers
-    nearest_merchants = [merchant for merchant in merchant if haversine(lat, long, merchant.latitude, merchant.longitude) <= radius]
+    # Filter merchants within a certain radius (e.g., 10km)
+    radius = 10  # Radius in kilometers
+    nearest_merchants = [merchant for merchant in merchants if haversine(lat, long, merchant.latitude, merchant.longitude) <= radius]
     
     return nearest_merchants
 
