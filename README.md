@@ -5,7 +5,7 @@
 # **Interactive API documentation**
 
 
-![img_3.png](packages/merchant-api/static/ApiEndPoint.png)
+![img_3.png](docs/static/ApiEndPoint.png)
 
 
 ### Project Overview
