@@ -11,7 +11,7 @@ from db.session import get_db
 from db.repository.merchant import (
     create_new_merchant,
     get_all_merchants,
-    retreive_merchant,
+    get_merchant_by_id,
     get_merchat_by_lat_long,
     get_merchant_by_name,
     get_merchant_by_name_lat_log,
@@ -30,48 +30,65 @@ from schemas.merchant import (
 
 router = APIRouter()
 
-# create new merchant route 
+
+
+# create new merchant route ------------------------------------------------------------|
 @router.post("/merchant", response_model=ShowMerchant, status_code=status.HTTP_201_CREATED)
 def create_merchant(
     merchant: CreateMerchant,
     db: Session = Depends(get_db),
 ):
-    merchant = create_new_merchant(merchant=merchant, db=db)
-    print("\n", merchant)
-    return merchant
+    created_merchant = create_new_merchant(merchant=merchant, db=db)
+    if not created_merchant:
+        raise HTTPException(
+            detail=f"Merchant could not be created.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+    return created_merchant
 
-# get all merchant route
+# get all merchant route ----------------------------------------------------------------|
 @router.get("/merchants", response_model=List[ShowMerchant])
 def get_all_merchant(db: Session = Depends(get_db)):
     merchants = get_all_merchants(db=db)
+    if not merchants:
+        raise HTTPException(
+            detail=f"No merchants found.",
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
     return merchants
 
-# get merchats with pagination route
+# get merchants with pagination route -----------------------------------------------------|
 @router.get("/merchants/pagination", response_model=List[ShowMerchant])
 def get_merchants_with_pagination(page: int, per_page: int, db: Session = Depends(get_db)):
     merchants = get_merchants_with_pagination(page=page, per_page=per_page, db=db)
+    if not merchants:
+        raise HTTPException(
+            detail=f"No merchants found for page {page} and per_page {per_page}.",
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
     return merchants
 
-# get merchant by id route
+# get merchant by id route -----------------------------------------------------------------|
 @router.get("/merchant/{id}", response_model=ShowMerchant)
 def get_merchant(id: int, db: Session = Depends(get_db)):
-    merchant = retreive_merchant(id=id, db=db)
+    merchant = get_merchant_by_id(id=id, db=db)
     if not merchant:
         raise HTTPException(
-            detail=f"merchants with ID {id} does not exist.",
+            detail=f"Merchant with ID {id} not found.",
             status_code=status.HTTP_404_NOT_FOUND,
         )
     return merchant
 
-# get merchant by name route
+# get merchant by name route -------------------------------------------------------------|
 @router.get("/merchant/{name}", response_model=ShowMerchant)
 def get_merchant_by_name(name: str, db: Session = Depends(get_db)):
     merchant = get_merchant_by_name(name=name, db=db)
     if not merchant:
         raise HTTPException(
-            detail=f"merchants with name {name} does not exist.",
+            detail=f"Merchant with name {name} not found.",
             status_code=status.HTTP_404_NOT_FOUND,
         )
+    return merchant
 
 # get merchant by location latitude & longitude route
 @router.get("/merchants/{lat}/{long}", response_model=ShowMerchant)
@@ -79,32 +96,33 @@ def get_merchant_by_lat_long(lat: float, long: float, db: Session = Depends(get_
     merchant = get_merchat_by_lat_long(lat=lat, long=long, db=db)
     if not merchant:
         raise HTTPException(
-            detail=f"merchants with latitude {lat} and longitude {long} does not exist.",
+            detail=f"Merchant with latitude {lat} and longitude {long} not found.",
             status_code=status.HTTP_404_NOT_FOUND,
         )
     return merchant
-    
-# # get merchant by name, latitude, longitude of route
-# @router.get("/merchants/{name}/{lat}/{long}", response_model=ShowMerchant)
-# def get_merchat_by_name_lat_long(name: str, lat: float, long: float, db: Session = Depends(get_db)):
-#     merchant = get_merchant_by_name_lat_log(lat=lat, long=long, db=db)
-#     if not merchant:
-#         raise HTTPException(
-#             detail=f"merchants with latitude {lat} and longitude {long} does not exist.",
-#             status_code=status.HTTP_404_NOT_FOUND,
-#         )
-#     return merchant
 
-# get top 10 nearest merchant by latitude, longitude by calculate radius route
-@router.get("/merchants/top10/{lat}/{long}", response_model=List[ShowMerchant])
-def get_top10_nearest_merchant(lat: float, long: float, db: Session = Depends(get_db)):
-    merchant = get_top10_nearest_merchant(lat=lat, long=long, db=db)
+# get merchant by name, latitude, longitude of route -------------------------------------------------|
+@router.get("/merchants/{name}/{lat}/{long}", response_model=ShowMerchant)
+def get_merchat_by_name_lat_long(name: str, lat: float, long: float, db: Session = Depends(get_db)):
+    merchant = get_merchant_by_name_lat_log(lat=lat, long=long, db=db)
     if not merchant:
         raise HTTPException(
-            detail=f"merchants with latitude {lat} and longitude {long} does not exist.",
+            detail=f"Merchant with name {name}, latitude {lat}, and longitude {long} not found.",
             status_code=status.HTTP_404_NOT_FOUND,
         )
     return merchant
+
+# get top 10 nearest merchant by latitude, longitude by calculate radius route ---------------|
+@router.get("/merchants/top10/{lat}/{long}", response_model=List[ShowMerchant])
+def get_top10_nearest_merchant(lat: float, long: float, db: Session = Depends(get_db)):
+    merchants = get_top10_nearest_merchant(lat=lat, long=long, db=db)
+    if not merchants:
+        raise HTTPException(
+            detail=f"No merchants found within 10km of latitude {lat} and longitude {long}.",
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+    return merchants
+
 
 
 

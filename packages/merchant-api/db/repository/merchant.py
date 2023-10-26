@@ -8,49 +8,69 @@ from sqlalchemy import func
 import sys
 sys.setrecursionlimit(10000000)
 
-# create new merchant
+
+
+# create new merchant --------------------------------------------|
 def create_new_merchant(merchant: CreateMerchant, db: Session):
-    merchant = Merchant(**merchant.dict())
-    db.add(merchant)
-    db.commit()
-    db.refresh(merchant)
-    return merchant
+    try:
+        
+        if merchant.latitude is None:
+            merchant.latitude = 0
+        
+        if merchant.longitude is None:
+            merchant.longitude = 0
+        
+        if merchant.name is None:
+            merchant.name = ""
+        
+        merchant = Merchant(**merchant.dict())
+        
+        db.add(merchant)
+        db.commit()
+        db.refresh(merchant)
+        return merchant
+    except Exception as e:
+        print(f"Error occurred while creating new merchant: {e}")
+        return None
 
-# get merchat by ID
-def retreive_merchant(id: int, db: Session):
-    merchant = db.query(Merchant).filter(Merchant.id == id).first()
-    return merchant
 
-# get all merchats 
+# get merchat by ID ----------------------------------------------|
+def get_merchant_by_id(id: int, db: Session):
+    merchant = db.query(Merchant).filter(Merchant.id == id).first()    
+    return merchant
+    
+    
+# get all merchats -----------------------------------------------|
 def get_all_merchants(db: Session):
     merchants = db.query(Merchant).all()
     return merchants
-
-# get all merchants with pagination
+    
+    
+# get all merchants with pagination ------------------------------|
 def get_merchants_with_pagination(page: int, per_page: int, db: Session):
     merchants = db.query(Merchant).offset(page).limit(per_page).all()
     return merchants
 
 
-
-# get merchant by name of merchant
+# get merchant by name of merchant --------------------------------|
 def get_merchant_by_name(name: str, db: Session):
     merchant = db.query(Merchant).filter(Merchant.name == name).first()
     return merchant
 
-
-# get merchant by location latitude & longitude
+    
+# get merchant by location latitude & longitude ------------------------------------------------|
 def get_merchat_by_lat_long(lat: float, long: float, db: Session):
     merchant = db.query(Merchant).filter( Merchant.latitude == lat, Merchant.longitude == long).first()
     return merchant
+
 
 # get merchat by name, latitude, longitude of merchant
 def get_merchant_by_name_lat_log(name: str,lat: float, long: float, db: Session):
     merchant = db.query(Merchant).filter(Merchant.latitude == lat, Merchant.longitude == long, Merchant.name == name).first()
     return merchant 
 
-# -------------------------------------------------------------------------------------
-# get top 10 nearest merchant by latitude, longitude by calculate radius 
+
+# get top 10 nearest merchant by latitude, longitude by calculate radius -----------------------|
 def get_top10_nearest_merchant(lat: float, long: float, db: Session):
     # Haversine formula to calculate distance between two points
     def haversine(lat1, lon1, lat2, lon2):
@@ -74,8 +94,8 @@ def get_top10_nearest_merchant(lat: float, long: float, db: Session):
     return nearest_merchants
 
 
-# -------------------------------------------------------------------------------------
 
+# update merchant by id -------------------------------------------------------------|
 def update_merchant(id: int, merchant: UpdateMerchant, author_id: int, db: Session):
     merchant_in_db = db.query(Merchant).filter(Merchant.id == id).first()
     if not merchant_in_db:
@@ -88,7 +108,7 @@ def update_merchant(id: int, merchant: UpdateMerchant, author_id: int, db: Sessi
     db.commit()
     return merchant_in_db
 
-
+# delete merchant by id -------------------------------------------------------------|
 def delete_merchant(id: int, author_id: int, db: Session):
     merchant_in_db = db.query(Merchant).filter(Merchant.id == id)
     if not merchant_in_db.first():
