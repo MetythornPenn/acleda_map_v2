@@ -3,6 +3,9 @@ from schemas.merchant import CreateMerchant
 from schemas.merchant import UpdateMerchant
 from sqlalchemy.orm import Session
 
+from math import radians, cos, sin, asin, sqrt, atan2
+from sqlalchemy import func
+
 # create new merchant
 def create_new_merchant(merchant: CreateMerchant, db: Session):
     merchant = Merchant(**merchant.dict())
@@ -44,25 +47,33 @@ def get_merchant_by_name_lat_log(lat: float, long: float, name: str, db: Session
     merchant = db.query(Merchant).filter(Merchant.latitude == lat, Merchant.longitude == long, Merchant.name == name).first()
     return merchant 
 
-
+# -------------------------------------------------------------------------------------
 # get top 10 nearest merchant by latitude, longitude by calculate radius 
+
 def get_top10_nearest_merchant(lat: float, long: float, db: Session):
-    merchant = db.query(Merchant).filter(Merchant.latitude == lat, Merchant.longitude == long).limit(10).all()
-    return merchant
-
-
+    # Haversine formula to calculate distance between two points
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 6371.0 # Radius of the earth in kilometers
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        distance = R * c # Distance in kilometers
+        return distance
     
+    # Calculate the distance between the merchant with user with order by distance 
+    merchant = db.query(Merchant).order_by(
+        func.sqrt((Merchant.latitude - lat) ** 2 + (Merchant.longitude - long) **2)
+    ).limit(10).all()
+    
+    # Filter merchants within a certain radius (e.g 10km)
+    radius = 10 # Radius in kilometers
+    nearest_merchants = [merchant for merchant in merchant if haversine(lat, long, merchant.latitude, merchant.longitude) <= radius]
+    
+    return nearest_merchants
 
 
-
-
-
-
-
-
-
-
-
+# -------------------------------------------------------------------------------------
 
 def update_merchant(id: int, merchant: UpdateMerchant, author_id: int, db: Session):
     merchant_in_db = db.query(Merchant).filter(Merchant.id == id).first()
