@@ -52,3 +52,15 @@ config tensorflow :
 - sudo apt update
 - sudo apt install cudatool-kit-11.6
 
+
+
+Sareoun Z1Data (Consultant), [24 Oct 2023 at 9:00:25 AM]:
+1. api/v1/merchants
+2. api/v1/merchants?location=lat,lng
+3. api/v1/merchants?name=merchant_name
+4. api/v1/merchants?location=lat,long&name=merchant_name
+
+Objective for today
+1. defind  schema for merchants get request paramater
+2. defind schema for merchants get respond attributes
+3. defind request errros response

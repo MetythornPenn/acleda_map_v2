@@ -6,25 +6,29 @@ from pydantic import root_validator
 
 
 class CreateMerchant(BaseModel):
-    title: str
-    slug: Optional[str]
-    content: Optional[str] = None
+    id: int
+    name: str
+    latitude: float
+    longitude: float
 
-    @root_validator(pre=True)
-    def generate_slug(cls, values):
-        if "title" in values:
-            values["slug"] = values.get("title").replace(" ", "-").lower()
-        return values
 
 
 class UpdateMerchant(CreateMerchant):
     pass
 
-
 class ShowMerchant(BaseModel):
-    title: str
-    content: Optional[str]
-    created_at: date
-
+    id: int
+    name: Optional[str]
+    latitude: Optional[float]
+    longitude: Optional[float]
+    class Config:
+        orm_mode = True
+        
+        
+class ShowMerchantWithLatLong(BaseModel):
+    id: int
+    name: Optional[str]
+    latitude: Optional[float]
+    longitude: Optional[float]
     class Config:
         orm_mode = True
